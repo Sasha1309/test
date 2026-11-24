@@ -1,0 +1,91 @@
+using System;
+using System.Globalization;
+using System.Linq;
+
+class Student
+{
+    public string Name;
+    public string Specialty;
+    public decimal Grade;
+    public string Group;
+
+    public Student() : this("Не указано", "Не указана", 0, "Не указана") { }
+
+    public Student(string name, string specialty, decimal grade, string group)
+    {
+        Name = name;
+        Specialty = specialty;
+        Grade = grade;
+        Group = group;
+    }
+
+    public void Print()
+    {
+        Console.WriteLine($"{Name} | {Specialty} | Балл: {Grade} | Группа: {Group}");
+    }
+
+    public bool Matches(string field, string value)
+    {
+        switch (field)
+        {
+            case "1": return Name == value;
+            case "2": return Specialty == value;
+            case "3":
+                return decimal.TryParse(value.Replace(',', '.'), NumberStyles.Number,
+                    CultureInfo.InvariantCulture, out decimal grade) && Grade == grade;
+            case "4": return Group == value;
+            default: return false;
+        }
+    }
+}
+
+class Program
+{
+    static string Read(string question)
+    {
+        Console.Write(question + " ");
+        return (Console.ReadLine() ?? "").Trim();
+    }
+
+    static void Main()
+    {
+        Console.WriteLine("Студент по умолчанию:");
+        new Student().Print();
+
+        int n = int.Parse(Read("Сколько студентов ввести?"));
+        Student[] students = new Student[n];
+
+        for (int i = 0; i < n; i++)
+        {
+            Console.WriteLine($"\nСтудент №{i + 1}");
+            string name = Read("Имя:");
+            string specialty = Read("Специальность:");
+            string score = Read("Средний балл:").Replace(',', '.');
+            decimal grade = decimal.Parse(score, CultureInfo.InvariantCulture);
+            string group = Read("Группа:");
+
+            students[i] = new Student(name, specialty, grade, group);
+        }
+
+        Console.WriteLine("\nВсе студенты:");
+        foreach (Student s in students)
+            s.Print();
+
+        string field = Read("\nПоиск: 1 — имя, 2 — специальность, 3 — балл, 4 — группа:");
+        string value = Read("Что найти?");
+        Student[] found = students.Where(s => s.Matches(field, value)).ToArray();
+
+        if (found.Length == 0)
+            Console.WriteLine("Студенты не найдены.");
+        foreach (Student s in found)
+            s.Print();
+
+        string order = Read("\nСортировка по баллу: 1 — по возрастанию, 2 — по убыванию:");
+        var sorted = order == "1"
+            ? students.OrderBy(s => s.Grade)
+            : students.OrderByDescending(s => s.Grade);
+
+        foreach (Student s in sorted)
+            s.Print();
+    }
+}
